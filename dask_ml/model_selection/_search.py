@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+import inspect
 import logging
 import numbers
 from collections import defaultdict
@@ -56,6 +57,7 @@ from .methods import (
 from .utils import DeprecationDict, is_dask_collection, to_indexable, to_keys, unzip
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] [%(process)s/%(threadName)s] [%(levelname)s] [%(name)s] %(message)s')
 
 try:
     from cytoolz import get, pluck
@@ -1067,6 +1069,8 @@ class DaskBaseSearchCV(BaseEstimator, MetaEstimatorMixin):
         n_jobs=-1,
         cache_cv=True,
     ):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.__init__ called from %s" % caller_name)
         self.scoring = scoring
         self.estimator = estimator
         self.iid = iid
@@ -1079,6 +1083,8 @@ class DaskBaseSearchCV(BaseEstimator, MetaEstimatorMixin):
         self.cache_cv = cache_cv
 
     def _check_if_refit(self, attr):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV._check_if_refit called from %s" % caller_name)
         if not self.refit:
             raise AttributeError(
                 "'{}' is not a valid attribute with " "'refit=False'.".format(attr)
@@ -1086,16 +1092,22 @@ class DaskBaseSearchCV(BaseEstimator, MetaEstimatorMixin):
 
     @property
     def _estimator_type(self):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV._estimator_type called from %s" % caller_name)
         return self.estimator._estimator_type
 
     @property
     def best_params_(self):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.best_params_ called from %s" % caller_name)
         check_is_fitted(self, "cv_results_")
         self._check_if_refit("best_params_")
         return self.cv_results_["params"][self.best_index_]
 
     @property
     def best_score_(self):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.best_score_ called from %s" % caller_name)
         check_is_fitted(self, "cv_results_")
         self._check_if_refit("best_score_")
         if self.multimetric_:
@@ -1105,6 +1117,8 @@ class DaskBaseSearchCV(BaseEstimator, MetaEstimatorMixin):
         return self.cv_results_["mean_test_{}".format(key)][self.best_index_]
 
     def _check_is_fitted(self, method_name):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV._check_is_fitted called from %s" % caller_name)
         if not self.refit:
             msg = (
                 "This {0} instance was initialized with refit=False. {1} "
@@ -1117,47 +1131,63 @@ class DaskBaseSearchCV(BaseEstimator, MetaEstimatorMixin):
 
     @property
     def classes_(self):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.classes_ called from %s" % caller_name)
         self._check_is_fitted("classes_")
         return self.best_estimator_.classes_
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     @derived_from(BaseSearchCV)
     def predict(self, X):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.predict called from %s" % caller_name)
         self._check_is_fitted("predict")
         return self.best_estimator_.predict(X)
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     @derived_from(BaseSearchCV)
     def predict_proba(self, X):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.predict_proba called from %s" % caller_name)
         self._check_is_fitted("predict_proba")
         return self.best_estimator_.predict_proba(X)
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     @derived_from(BaseSearchCV)
     def predict_log_proba(self, X):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.predict_log_proba called from %s" % caller_name)
         self._check_is_fitted("predict_log_proba")
         return self.best_estimator_.predict_log_proba(X)
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     @derived_from(BaseSearchCV)
     def decision_function(self, X):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.decision_function called from %s" % caller_name)
         self._check_is_fitted("decision_function")
         return self.best_estimator_.decision_function(X)
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     @derived_from(BaseSearchCV)
     def transform(self, X):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.transform called from %s" % caller_name)
         self._check_is_fitted("transform")
         return self.best_estimator_.transform(X)
 
     @if_delegate_has_method(delegate=("best_estimator_", "estimator"))
     @derived_from(BaseSearchCV)
     def inverse_transform(self, Xt):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.inverse_transform called from %s" % caller_name)
         self._check_is_fitted("inverse_transform")
         return self.best_estimator_.transform(Xt)
 
     @derived_from(BaseSearchCV)
     def score(self, X, y=None):
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.score called from %s" % caller_name)
         if self.scorer_ is None:
             raise ValueError(
                 "No score function explicitly defined, "
@@ -1182,6 +1212,8 @@ class DaskBaseSearchCV(BaseEstimator, MetaEstimatorMixin):
         **fit_params
             Parameters passed to the ``fit`` method of the estimator
         """
+        caller_name = inspect.stack()[1][3]
+        logger.info("DaskBaseSearchCV.fit called from %s" % caller_name)
         estimator = self.estimator
         from sklearn.metrics.scorer import _check_multimetric_scoring
 
@@ -1565,6 +1597,8 @@ class GridSearchCV(StaticDaskSearchMixin, DaskBaseSearchCV):
         n_jobs=-1,
         cache_cv=True,
     ):
+        caller_name = inspect.stack()[1][3]
+        logger.info("GridSearchCV.__init__ called from %s" % caller_name)
         super(GridSearchCV, self).__init__(
             estimator=estimator,
             scoring=scoring,
